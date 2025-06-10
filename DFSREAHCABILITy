@@ -1,0 +1,92 @@
+#include <iostream>
+#include <vector>
+#include <map>
+#include <string>
+#include <set>
+
+// We will represent states by integers:
+// M0: p9=1
+// M1: p1=1
+// M2: p2=1
+// M3: p3=1
+// M4: p4=1
+// M5: p5=1
+// M6: p6=1
+// M7: p7=1
+// M8: p8=1
+
+// Transitions (state -> vector of (transition_name, next_state))
+static std::map<int, std::vector<std::pair<std::string,int>>> transitions = {
+    {0, {{"t5->p1",1}, {"t5->p3",3}, {"t5->p5",5}, {"t5->p7",7}}},  // From M0
+    {1, {{"t1",2}}}, // M1 -> M2
+    {2, {{"t6",0}}}, // M2 -> M0
+    {3, {{"t2",4}}}, // M3 -> M4
+    {4, {{"t6",0}}}, // M4 -> M0
+    {5, {{"t3",6}}}, // M5 -> M6
+    {6, {{"t6",0}}}, // M6 -> M0
+    {7, {{"t4",8}}}, // M7 -> M8
+    {8, {{"t6",0}}}  // M8 -> M0
+};
+
+// State names for printing
+static std::map<int, std::string> stateNames = {
+    {0, "M0(p9=1)"},
+    {1, "M1(p1=1)"},
+    {2, "M2(p2=1)"},
+    {3, "M3(p3=1)"},
+    {4, "M4(p4=1)"},
+    {5, "M5(p5=1)"},
+    {6, "M6(p6=1)"},
+    {7, "M7(p7=1)"},
+    {8, "M8(p8=1)"}
+};
+
+// For storing the reachability tree, we can store parent->children relationships.
+struct Edge {
+    int from;
+    int to;
+    std::string transition;
+};
+
+std::vector<Edge> edges;
+std::set<int> visited;
+
+void dfs(int current) {
+    visited.insert(current);
+    // Explore all successor states
+    for (auto &tr : transitions[current]) {
+        std::string t_name = tr.first;
+        int next = tr.second;
+        edges.push_back({current, next, t_name});
+        if (visited.find(next) == visited.end()) {
+            dfs(next);
+        }
+    }
+}
+
+int main() {
+    // Start from M0
+    int initialState = 0;
+    dfs(initialState);
+
+    // Print out the reachability tree
+    // Since this is a cycle, we will see M0 multiple times,
+    // but we won't expand it more than once due to the 'visited' set.
+
+    // To print as a tree, we can do a simple indent-based approach.
+    // However, because there are cycles, a perfect "tree" format is tricky.
+    // We will print a simple listing of edges and visited nodes for clarity.
+
+    std::cout << "Reachability Tree States:\n";
+    for (auto s : visited) {
+        std::cout << stateNames[s] << "\n";
+    }
+
+    std::cout << "\nEdges (State --transition--> State):\n";
+    for (auto &e : edges) {
+        std::cout << stateNames[e.from] << " --" << e.transition << "--> " 
+                  << stateNames[e.to] << "\n";
+    }
+
+    return 0;
+}
